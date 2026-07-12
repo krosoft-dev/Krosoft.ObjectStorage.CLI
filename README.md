@@ -1,0 +1,1 @@
+# Krosoft.ObjectStorage.CLI
