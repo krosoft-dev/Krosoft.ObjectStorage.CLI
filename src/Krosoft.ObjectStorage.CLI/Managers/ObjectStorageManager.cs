@@ -67,7 +67,7 @@ internal class ObjectStorageManager : IObjectStorageManager
         }
     }
 
-    public async Task<int> Download(string profilePath, string path, string? outputPath, bool decodeBase64 = false)
+    public async Task<int> Download(string profilePath, string path, string? outputPath, bool decodeBase64 = false, bool formatXml = false)
     {
         var (profile, error) = await ProfileLoader.LoadAsync(profilePath);
         if (profile is null)
@@ -172,6 +172,36 @@ internal class ObjectStorageManager : IObjectStorageManager
                     }
 
                     WriteColoredLine(ConsoleColor.Green, $"  Décodé ({FormatSize(decoded.LongLength)}) → {decodedDestination}");
+
+                    if (formatXml)
+                    {
+                        Console.WriteLine("  Formatage XML en cours...");
+                        try
+                        {
+                            var rawXml = await File.ReadAllTextAsync(decodedDestination);
+                            var doc = new System.Xml.XmlDocument();
+                            doc.LoadXml(rawXml);
+
+                            var xmlSettings = new System.Xml.XmlWriterSettings
+                            {
+                                Async = true,
+                                Indent = true,
+                                IndentChars = "  ",
+                                NewLineChars = "\n",
+                                Encoding = new System.Text.UTF8Encoding(false)
+                            };
+
+                            await using var writer = System.Xml.XmlWriter.Create(decodedDestination, xmlSettings);
+                            doc.Save(writer);
+
+                            var formattedSize = new FileInfo(decodedDestination).Length;
+                            WriteColoredLine(ConsoleColor.Green, $"  XML formaté ({FormatSize(formattedSize)}) → {decodedDestination}");
+                        }
+                        catch (System.Xml.XmlException ex)
+                        {
+                            WriteColoredLine(ConsoleColor.Yellow, $"  Avertissement : le contenu décodé n'est pas un XML valide ({ex.Message}).");
+                        }
+                    }
                 }
                 catch (FormatException)
                 {

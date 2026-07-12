@@ -9,7 +9,7 @@ internal static class ProgramObjectStorage
         GetManager().Info(opts.Profile);
 
     public static Task<int> Download(Options.DownloadOptions opts)
-        => GetManager().Download(opts.Profile, opts.Path, opts.Output, opts.DecodeBase64);
+        => GetManager().Download(opts.Profile, opts.Path, opts.Output, opts.DecodeBase64, opts.FormatXml);
 
     public static Task<int> List(Options.ListOptions opts)
         => GetManager().List(opts.Profile, opts.Path);

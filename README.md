@@ -4,8 +4,6 @@
 
 Outil CLI pour interagir avec un stockage objet compatible S3 (MinIO, AWS S3, etc.).
 
- 
-
 ## Profil de connexion
 
 Toutes les commandes nécessitent un fichier de profil JSON via l'option `--profile`.
@@ -23,13 +21,13 @@ Toutes les commandes nécessitent un fichier de profil JSON via l'option `--prof
 }
 ```
 
-| Champ | Type | Requis | Description |
-|-------|------|--------|-------------|
-| `endpoint` | `string` | oui | URL de l'instance S3/MinIO |
-| `accessKey` | `string` | oui | Clé d'accès |
-| `secretKey` | `string` | oui | Clé secrète |
-| `useSSL` | `bool` | non | Active HTTPS (défaut : `false`) |
-| `timeout` | `int` | non | Timeout en secondes (défaut : `10`) |
+| Champ       | Type     | Requis | Description                         |
+| ----------- | -------- | ------ | ----------------------------------- |
+| `endpoint`  | `string` | oui    | URL de l'instance S3/MinIO          |
+| `accessKey` | `string` | oui    | Clé d'accès                         |
+| `secretKey` | `string` | oui    | Clé secrète                         |
+| `useSSL`    | `bool`   | non    | Active HTTPS (défaut : `false`)     |
+| `timeout`   | `int`    | non    | Timeout en secondes (défaut : `10`) |
 
 ---
 
@@ -45,9 +43,9 @@ Affiche les informations générales du stockage objet : endpoint, SSL, timeout 
 
 **Options**
 
-| Option | Raccourci | Requis | Description |
-|--------|-----------|--------|-------------|
-| `--profile` | `-p` | oui | Chemin vers le fichier de profil JSON |
+| Option      | Raccourci | Requis | Description                           |
+| ----------- | --------- | ------ | ------------------------------------- |
+| `--profile` | `-p`      | oui    | Chemin vers le fichier de profil JSON |
 
 **Exemple de sortie**
 
@@ -78,10 +76,10 @@ Liste les fichiers d'un bucket, avec filtrage optionnel par préfixe. Supporte l
 
 **Options**
 
-| Option | Raccourci | Requis | Description |
-|--------|-----------|--------|-------------|
-| `--profile` | `-p` | oui | Chemin vers le fichier de profil JSON |
-| `--path` | `-d` | oui | `bucket` ou `bucket/préfixe/` à parcourir |
+| Option      | Raccourci | Requis | Description                               |
+| ----------- | --------- | ------ | ----------------------------------------- |
+| `--profile` | `-p`      | oui    | Chemin vers le fichier de profil JSON     |
+| `--path`    | `-d`      | oui    | `bucket` ou `bucket/préfixe/` à parcourir |
 
 **Exemple de sortie**
 
@@ -109,23 +107,21 @@ Télécharge un fichier depuis le stockage objet vers le système de fichiers lo
 
 
 
- 
-# Destination explicite
-.\src\Krosoft.ObjectStorage.CLI\bin\Debug\net10.0\Krosoft.ObjectStorage.CLI.exe download --profile ./files/local.json  --path archivage/peppol/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --output ./dumps/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --decode-base64
- 
 
-# Téléchargement + décodage Base64 vers un chemin précis
-.\src\Krosoft.ObjectStorage.CLI\bin\Debug\net10.0\Krosoft.ObjectStorage.CLI.exe download --profile ./files/local.json  --path archivage/peppol/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --output ./dumps/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --decode-base64
+
+# Téléchargement avancé
+.\src\Krosoft.ObjectStorage.CLI\bin\Debug\net10.0\Krosoft.ObjectStorage.CLI.exe download --profile ./files/local.json  --path archivage/peppol/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --output ./dumps/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --decode-base64 --format-xml
 ```
 
 **Options**
 
-| Option | Raccourci | Requis | Description |
-|--------|-----------|--------|-------------|
-| `--profile` | `-p` | oui | Chemin vers le fichier de profil JSON |
-| `--path` | `-d` | oui | Chemin du fichier à télécharger au format `bucket/clé` |
-| `--output` | `-o` | non | Chemin local de destination (défaut : répertoire courant) |
-| `--decode-base64` | `-b` | non | Décode le contenu depuis Base64 après téléchargement |
+| Option            | Raccourci | Requis | Description                                                                    |
+| ----------------- | --------- | ------ | ------------------------------------------------------------------------------ |
+| `--profile`       | `-p`      | oui    | Chemin vers le fichier de profil JSON                                          |
+| `--path`          | `-d`      | oui    | Chemin du fichier à télécharger au format `bucket/clé`                         |
+| `--output`        | `-o`      | non    | Chemin local de destination (défaut : répertoire courant)                      |
+| `--decode-base64` | `-b`      | non    | Décode le contenu depuis Base64 après téléchargement                           |
+| `--format-xml`    | `-x`      | non    | Formate le contenu en XML indenté après décodage (nécessite `--decode-base64`) |
 
 **Comportement de `--decode-base64`**
 
@@ -133,12 +129,18 @@ Télécharge un fichier depuis le stockage objet vers le système de fichiers lo
 - Si le fichier source a l'extension `.b64`, elle est automatiquement retirée du fichier de sortie (ex: `data.json.b64` → `data.json`).
 - En cas de contenu Base64 invalide, une erreur est retournée.
 
+**Comportement de `--format-xml`**
+
+- S'applique après le décodage Base64 (`--decode-base64` requis).
+- Parse le contenu décodé comme XML et le réécrit indenté (2 espaces, UTF-8 sans BOM).
+- En cas de XML invalide, un avertissement est affiché mais le fichier décodé est conservé.
+
 **Exemple de sortie**
 
 ```
   Progression : 100%  (1.2 MB / 1.2 MB)
 
-  Fichier téléchargé en 342 ms → C:\Téléchargements\rapport.pdf
+  Fichier téléchargé en 342 ms → ./dumps/rapport.pdf
 ```
 
 Avec `--decode-base64` :
@@ -146,7 +148,19 @@ Avec `--decode-base64` :
 ```
   Progression : 100%  (45.3 KB / 45.3 KB)
 
-  Fichier téléchargé en 87 ms → C:\out\data.json.b64
+  Fichier téléchargé en 87 ms → ./dumps/data.json.b64
   Décodage Base64 en cours...
-  Décodé (33.1 KB) → C:\out\data.json
+  Décodé (33.1 KB) → ./dumps/data.json
+```
+
+Avec `--decode-base64 --format-xml` :
+
+```
+  Progression : 100%  (18.2 KB / 18.2 KB)
+
+  Fichier téléchargé en 54 ms → ./dumps/invoice.xml.b64
+  Décodage Base64 en cours...
+  Décodé (13.4 KB) → ./dumps/invoice.xml
+  Formatage XML en cours...
+  XML formaté (15.1 KB) → ./dumps/invoice.xml
 ```

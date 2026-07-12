@@ -35,5 +35,8 @@ internal static class Options
 
         [Option('b', "decode-base64", Required = false, Default = false, HelpText = "Décode le contenu du fichier depuis Base64 après téléchargement.")]
         public bool DecodeBase64 { get; set; }
+
+        [Option('x', "format-xml", Required = false, Default = false, HelpText = "Formate le contenu en XML indenté après décodage Base64 (nécessite --decode-base64).")]
+        public bool FormatXml { get; set; }
     }
 }
