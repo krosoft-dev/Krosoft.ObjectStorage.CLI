@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Krosoft.ObjectStorage.CLI": {
+      "commandName": "Project",
+      // "commandLineArgs": "info"
+      "commandLineArgs": "queues -l"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/Krosoft.ObjectStorage.CLI/Krosoft.ObjectStorage.CLI.csproj" />
+  <Project Path="tests/Krosoft.ObjectStorage.CLI.Tests/Krosoft.ObjectStorage.CLI.Tests.csproj" />
+</Solution>

@@ -1,0 +1,12 @@
+{
+  "name": "local",
+
+  "objectStorage": {
+    "Type": "s3",
+    "Endpoint": "http://localhost:9000",
+    "AccessKey": "NTettes0vZoY3H6GT5eT",
+    "SecretKey": "aPVq3WJXliHnh0IKXtuW8V9Y3m3OlugUugzm9emo",
+    "UseSSL": false,
+    "Timeout": 10
+  }
+}
