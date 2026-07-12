@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 
 namespace Krosoft.ObjectStorage.CLI;
 
@@ -8,10 +8,12 @@ internal static class Program
     {
         PrintBanner();
         return await Parser.Default.ParseArguments<Options.InfoOptions,
-                               Options.ListOptions>(args)
+                               Options.ListOptions,
+                               Options.DownloadOptions>(args)
                            .MapResult(
                                       (Options.InfoOptions opts) => ProgramObjectStorage.Info(opts),
                                       (Options.ListOptions opts) => ProgramObjectStorage.List(opts),
+                                      (Options.DownloadOptions opts) => ProgramObjectStorage.Download(opts),
                                       _ => Task.FromResult(-1));
     }
 
