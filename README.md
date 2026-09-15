@@ -38,7 +38,7 @@ Toutes les commandes nécessitent un fichier de profil JSON via l'option `--prof
 Affiche les informations générales du stockage objet : endpoint, SSL, timeout et liste des buckets.
 
 ```bash
-.\src\Krosoft.ObjectStorage.CLI\bin\Debug\net10.0\Krosoft.ObjectStorage.CLI.exe info --profile ./files/local.json
+dotnet run --project src/Krosoft.ObjectStorage.CLI -- info --profile ./files/local.json
 ```
 
 **Options**
@@ -69,9 +69,7 @@ Buckets          : 3
 Liste les fichiers d'un bucket, avec filtrage optionnel par préfixe. Supporte la pagination automatique (>1000 objets).
 
 ```bash
-
-.\src\Krosoft.ObjectStorage.CLI\bin\Debug\net10.0\Krosoft.ObjectStorage.CLI.exe info --profile ./files/local.json
-.\src\Krosoft.ObjectStorage.CLI\bin\Debug\net10.0\Krosoft.ObjectStorage.CLI.exe list --profile ./files/local.json  --path /archivage
+dotnet run --project src/Krosoft.ObjectStorage.CLI -- list --profile ./files/local.json --path /archivage
 ```
 
 **Options**
@@ -103,14 +101,13 @@ Télécharge un fichier depuis le stockage objet vers le système de fichiers lo
 
 ```bash
 # Téléchargement dans le répertoire courant
-.\src\Krosoft.ObjectStorage.CLI\bin\Debug\net10.0\Krosoft.ObjectStorage.CLI.exe download --profile ./files/local.json --path mon-bucket/dossier/fichier.csv
+dotnet run --project src/Krosoft.ObjectStorage.CLI -- download --profile ./files/local.json --path mon-bucket/dossier/fichier.csv
 
-
-
-
+# Téléchargement dans un dossier (le nom du fichier distant est conservé)
+dotnet run --project src/Krosoft.ObjectStorage.CLI -- download --profile ./files/local.json --path archivage/deus/cdar/01a0735c-36a4-751c-ba2f-221d8a45fa11_Rejetee.xml --output ./dumps/
 
 # Téléchargement avancé
-.\src\Krosoft.ObjectStorage.CLI\bin\Debug\net10.0\Krosoft.ObjectStorage.CLI.exe download --profile ./files/local.json  --path archivage/peppol/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --output ./dumps/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --decode-base64 --format-xml
+dotnet run --project src/Krosoft.ObjectStorage.CLI -- download --profile ./files/local.json --path archivage/peppol/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --output ./dumps/019ef51a-ce8d-73d7-a7a9-86e0d82d060f --decode-base64 --format-xml
 ```
 
 **Options**
@@ -119,7 +116,7 @@ Télécharge un fichier depuis le stockage objet vers le système de fichiers lo
 | ----------------- | --------- | ------ | ------------------------------------------------------------------------------ |
 | `--profile`       | `-p`      | oui    | Chemin vers le fichier de profil JSON                                          |
 | `--path`          | `-d`      | oui    | Chemin du fichier à télécharger au format `bucket/clé`                         |
-| `--output`        | `-o`      | non    | Chemin local de destination (défaut : répertoire courant)                      |
+| `--output`        | `-o`      | non    | Destination locale : chemin de fichier, ou dossier s'il finit par `/` (défaut : répertoire courant). Les dossiers manquants sont créés automatiquement. |
 | `--decode-base64` | `-b`      | non    | Décode le contenu depuis Base64 après téléchargement                           |
 | `--format-xml`    | `-x`      | non    | Formate le contenu en XML indenté après décodage (nécessite `--decode-base64`) |
 

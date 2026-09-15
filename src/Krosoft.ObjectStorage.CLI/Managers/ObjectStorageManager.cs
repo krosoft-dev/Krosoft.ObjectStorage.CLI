@@ -96,9 +96,7 @@ internal class ObjectStorageManager : IObjectStorageManager
         }
 
         var fileName = Path.GetFileName(key);
-        var destination = string.IsNullOrWhiteSpace(outputPath)
-            ? Path.Combine(Directory.GetCurrentDirectory(), fileName)
-            : outputPath;
+        var destination = ResolveDestination(outputPath, fileName);
 
         var settings = profile.ObjectStorage;
 
@@ -297,6 +295,25 @@ internal class ObjectStorageManager : IObjectStorageManager
         {
             return HandleError($"Impossible de lister les fichiers : {ex.Message}");
         }
+    }
+
+    // Résout le chemin de fichier final. Si --output désigne un répertoire
+    // (se termine par un séparateur ou correspond à un dossier existant),
+    // le nom du fichier distant y est ajouté.
+    private static string ResolveDestination(string? outputPath, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(outputPath))
+        {
+            return Path.Combine(Directory.GetCurrentDirectory(), fileName);
+        }
+
+        var isDirectory = Directory.Exists(outputPath)
+                          || outputPath.EndsWith(Path.DirectorySeparatorChar)
+                          || outputPath.EndsWith(Path.AltDirectorySeparatorChar);
+
+        return isDirectory
+            ? Path.Combine(outputPath, fileName)
+            : outputPath;
     }
 
     private static string FormatSize(long? bytes) => bytes switch
