@@ -9,11 +9,13 @@ internal static class Program
         PrintBanner();
         return await Parser.Default.ParseArguments<Options.InfoOptions,
                                Options.ListOptions,
-                               Options.DownloadOptions>(args)
+                               Options.DownloadOptions,
+                               Options.UploadOptions>(args)
                            .MapResult(
                                       (Options.InfoOptions opts) => ProgramObjectStorage.Info(opts),
                                       (Options.ListOptions opts) => ProgramObjectStorage.List(opts),
                                       (Options.DownloadOptions opts) => ProgramObjectStorage.Download(opts),
+                                      (Options.UploadOptions opts) => ProgramObjectStorage.Upload(opts),
                                       _ => Task.FromResult(-1));
     }
 

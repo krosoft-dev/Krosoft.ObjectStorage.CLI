@@ -215,6 +215,97 @@ internal class ObjectStorageManager : IObjectStorageManager
         }
     }
 
+    public async Task<int> Upload(string profilePath, string path, string inputPath, bool encodeBase64 = false, bool formatXml = false)
+    {
+        var (profile, error) = await ProfileLoader.LoadAsync(profilePath);
+        if (profile is null)
+        {
+            return HandleError(error!);
+        }
+
+        if (profile.ObjectStorage is null)
+        {
+            return HandleError("Le profil ne contient pas de section 'objectStorage'.");
+        }
+
+        if (!File.Exists(inputPath))
+        {
+            return HandleError($"Le fichier local est introuvable : {inputPath}");
+        }
+
+        // Parse path : "bucket/key"
+        var slashIndex = path.IndexOf('/');
+        if (slashIndex < 0)
+        {
+            return HandleError("Le chemin doit être au format 'bucket/chemin/du/fichier'.");
+        }
+
+        var bucketName = path[..slashIndex];
+        var key = path[(slashIndex + 1)..];
+
+        if (string.IsNullOrWhiteSpace(bucketName) || string.IsNullOrWhiteSpace(key))
+        {
+            return HandleError("Le bucket ou la clé du fichier est vide.");
+        }
+
+        var settings = profile.ObjectStorage;
+
+        DisplayHeader($"ENVOI — {path}");
+        Console.WriteLine($"Source : {inputPath}");
+        Console.WriteLine();
+
+        try
+        {
+            // Transformations en mémoire : le fichier local corrigé n'est pas modifié.
+            var content = await File.ReadAllBytesAsync(inputPath);
+
+            if (formatXml)
+            {
+                Console.WriteLine("  Normalisation XML (inline) en cours...");
+                try
+                {
+                    content = MinifyXml(content);
+                    WriteColoredLine(ConsoleColor.Green, $"  XML normalisé ({FormatSize(content.LongLength)})");
+                }
+                catch (System.Xml.XmlException ex)
+                {
+                    return HandleError($"Le fichier n'est pas un XML valide : {ex.Message}");
+                }
+            }
+
+            if (encodeBase64)
+            {
+                Console.WriteLine("  Encodage Base64 en cours...");
+                var base64 = Convert.ToBase64String(content);
+                content = System.Text.Encoding.ASCII.GetBytes(base64);
+                WriteColoredLine(ConsoleColor.Green, $"  Encodé ({FormatSize(content.LongLength)})");
+            }
+
+            using var client = CreateClient(settings);
+
+            var request = new PutObjectRequest
+            {
+                BucketName = bucketName,
+                Key = key,
+                ContentType = ResolveContentType(key, encodeBase64, formatXml),
+                InputStream = new MemoryStream(content),
+                AutoCloseStream = true
+            };
+
+            var sw = Stopwatch.StartNew();
+            await client.PutObjectAsync(request);
+            sw.Stop();
+
+            WriteColoredLine(ConsoleColor.Green, $"\n  Fichier envoyé en {sw.ElapsedMilliseconds:N0} ms → {path} ({FormatSize(content.LongLength)})");
+
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            return HandleError($"Impossible d'envoyer le fichier : {ex.Message}");
+        }
+    }
+
     public async Task<int> List(string profilePath, string path)
     {
         var (profile, error) = await ProfileLoader.LoadAsync(profilePath);
@@ -316,6 +407,48 @@ internal class ObjectStorageManager : IObjectStorageManager
             : outputPath;
     }
 
+    // Recharge le XML et le réécrit sur une seule ligne (sans indentation ni
+    // espaces de mise en forme), en UTF-8 sans BOM.
+    private static byte[] MinifyXml(byte[] content)
+    {
+        var doc = new System.Xml.XmlDocument { PreserveWhitespace = false };
+        using (var input = new MemoryStream(content))
+        {
+            doc.Load(input);
+        }
+
+        var xmlSettings = new System.Xml.XmlWriterSettings
+        {
+            Indent = false,
+            NewLineChars = string.Empty,
+            NewLineHandling = System.Xml.NewLineHandling.Replace,
+            Encoding = new System.Text.UTF8Encoding(false)
+        };
+
+        using var stream = new MemoryStream();
+        using (var writer = System.Xml.XmlWriter.Create(stream, xmlSettings))
+        {
+            doc.Save(writer);
+        }
+
+        return stream.ToArray();
+    }
+
+    private static string ResolveContentType(string key, bool encodeBase64, bool formatXml)
+    {
+        if (encodeBase64)
+        {
+            return "text/plain";
+        }
+
+        if (formatXml || key.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+        {
+            return "application/xml";
+        }
+
+        return "application/octet-stream";
+    }
+
     private static string FormatSize(long? bytes) => bytes switch
     {
         null => "—",
@@ -337,7 +470,11 @@ internal class ObjectStorageManager : IObjectStorageManager
         {
             ForcePathStyle = true,
             Timeout = TimeSpan.FromSeconds(settings.Timeout),
-            MaxErrorRetry = 3
+            MaxErrorRetry = 3,
+            // Les backends compatibles S3 (MinIO, Ceph...) ne supportent pas le
+            // trailing checksum ajouté par défaut par le SDK v4 (WHEN_SUPPORTED).
+            RequestChecksumCalculation = Amazon.Runtime.RequestChecksumCalculation.WHEN_REQUIRED,
+            ResponseChecksumValidation = Amazon.Runtime.ResponseChecksumValidation.WHEN_REQUIRED
         };
 
         var scheme = settings.UseSSL ? "https" : "http";

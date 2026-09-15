@@ -161,3 +161,49 @@ Avec `--decode-base64 --format-xml` :
   Formatage XML en cours...
   XML formaté (15.1 KB) → ./dumps/invoice.xml
 ```
+
+---
+
+### `upload`
+
+Envoie un fichier local vers le stockage objet. Opération miroir de `download` : à partir d'un fichier corrigé localement (par ex. téléchargé et décodé/formaté au préalable), on peut le re-normaliser en XML inline puis le ré-encoder en Base64 avant l'envoi. Les transformations sont effectuées **en mémoire** — le fichier local n'est pas modifié.
+
+```bash
+# Envoi simple
+dotnet run --project src/Krosoft.ObjectStorage.CLI -- upload --profile ./files/local.json --path mon-bucket/dossier/fichier.csv --input ./corrections/fichier.csv
+
+# Renvoi d'un XML corrigé : normalisation inline + ré-encodage Base64 vers la même clé
+dotnet run --project src/Krosoft.ObjectStorage.CLI -- upload --profile ./files/prod.json --path archivage/deus/cdar/01a0735c-36a4-751c-ba2f-221d8a45fa11_Rejetee.xml --input ./dumps/01a0735c-36a4-751c-ba2f-221d8a45fa11_Rejetee.xml --format-xml --encode-base64
+```
+
+**Options**
+
+| Option            | Raccourci | Requis | Description                                                              |
+| ----------------- | --------- | ------ | ------------------------------------------------------------------------ |
+| `--profile`       | `-p`      | oui    | Chemin vers le fichier de profil JSON                                    |
+| `--path`          | `-d`      | oui    | Destination distante au format `bucket/clé`                              |
+| `--input`         | `-i`      | oui    | Chemin du fichier local à envoyer                                        |
+| `--format-xml`    | `-x`      | non    | Normalise le contenu XML sur une seule ligne (inline) avant l'envoi      |
+| `--encode-base64` | `-b`      | non    | Encode le contenu en Base64 avant l'envoi (appliqué après `--format-xml`) |
+
+**Ordre des transformations**
+
+1. Lecture du fichier `--input`.
+2. `--format-xml` : le XML est rechargé et réécrit sur une seule ligne (sans indentation ni espaces de mise en forme), UTF-8 sans BOM. En cas de XML invalide, une erreur est retournée et rien n'est envoyé.
+3. `--encode-base64` : le contenu (éventuellement déjà normalisé) est encodé en Base64.
+4. Envoi vers `bucket/clé`. Le `Content-Type` est `text/plain` si Base64, sinon `application/xml` pour un XML, sinon `application/octet-stream`.
+
+> `--format-xml` et `--encode-base64` sont indépendants et cumulables ; combinés, ils reproduisent le format attendu par le stockage (XML compact encodé en Base64).
+
+**Exemple de sortie**
+
+```
+Source : ./dumps/01a0735c-36a4-751c-ba2f-221d8a45fa11_Rejetee.xml
+
+  Normalisation XML (inline) en cours...
+  XML normalisé (13.9 KB)
+  Encodage Base64 en cours...
+  Encodé (18.5 KB)
+
+  Fichier envoyé en 128 ms → archivage/deus/cdar/01a0735c-36a4-751c-ba2f-221d8a45fa11_Rejetee.xml (18.5 KB)
+```

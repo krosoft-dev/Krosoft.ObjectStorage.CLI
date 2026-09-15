@@ -39,4 +39,23 @@ internal static class Options
         [Option('x', "format-xml", Required = false, Default = false, HelpText = "Formate le contenu en XML indenté après décodage Base64 (nécessite --decode-base64).")]
         public bool FormatXml { get; set; }
     }
+
+    [Verb("upload", HelpText = "Envoie un fichier local vers le stockage objet.")]
+    internal class UploadOptions
+    {
+        [Option('p', "profile", Required = true, HelpText = "Chemin vers le fichier de profil JSON.")]
+        public string Profile { get; set; } = string.Empty;
+
+        [Option('d', "path", Required = true, HelpText = "Destination distante (bucket/clé).")]
+        public string Path { get; set; } = string.Empty;
+
+        [Option('i', "input", Required = true, HelpText = "Chemin du fichier local à envoyer.")]
+        public string Input { get; set; } = string.Empty;
+
+        [Option('x', "format-xml", Required = false, Default = false, HelpText = "Normalise le contenu XML sur une seule ligne (inline) avant l'envoi.")]
+        public bool FormatXml { get; set; }
+
+        [Option('b', "encode-base64", Required = false, Default = false, HelpText = "Encode le contenu en Base64 avant l'envoi (appliqué après --format-xml).")]
+        public bool EncodeBase64 { get; set; }
+    }
 }
