@@ -488,14 +488,21 @@ internal class ObjectStorageManager : IObjectStorageManager
     private static void DisplayHeader(string title)
     {
         const int totalWidth = 100;
-        var paddingWidth = (totalWidth - title.Length) / 2;
-        var padding = new string(' ', paddingWidth);
+
+        // Tronque le titre s'il dépasse la largeur intérieure (marge d'un espace de chaque côté).
+        const int maxTitleWidth = totalWidth - 2;
+        if (title.Length > maxTitleWidth)
+        {
+            title = string.Concat(title.AsSpan(0, maxTitleWidth - 1), "…");
+        }
+
+        var totalPadding = totalWidth - title.Length;
+        var leftPadding = totalPadding / 2;
+        var rightPadding = totalPadding - leftPadding;
         var border = new string('═', totalWidth);
 
         WriteColoredLine(ConsoleColor.Green, $"╔{border}╗");
-        WriteColoredLine(ConsoleColor.Green, title.Length % 2 != 0
-                             ? $"║{padding} {title}{padding}║"
-                             : $"║{padding}{title}{padding}║");
+        WriteColoredLine(ConsoleColor.Green, $"║{new string(' ', leftPadding)}{title}{new string(' ', rightPadding)}║");
         WriteColoredLine(ConsoleColor.Green, $"╚{border}╝\n");
     }
 
